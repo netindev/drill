@@ -44,6 +44,12 @@ public class Worker extends Thread {
             array[3] = (byte) (nonce >> 24);
             this.miner.send(this.job, array, hash);
          }
+         synchronized (this.miner.hashrate) {
+            while (this.miner.hashrate.size() > 99) {
+               this.miner.hashrate.pop();
+            }
+         }
+         this.miner.hashrate.add(Long.valueOf(System.currentTimeMillis()));
          nonce++;
       }
    }

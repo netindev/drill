@@ -11,10 +11,10 @@ Usage: ```java -jar drill-x.x.x.jar -threads 2 -host localhost -port 3333 -user 
 ### Options
 | Arg | Description | Required |
 | --- | --- | --- |
-| -host | Pool host. | Yes |
-| -user | Username to log in to the pool. | Yes |
-| -port | Pool port. | Yes |
-| -pass | Password to your account in the pool | Optional |
+| -host | Pool host to connect | Yes |
+| -user | Username to login, also can be used your address | Yes |
+| -port | Pool host port | Yes |
+| -pass | Password to login | Optional |
 | -thread | Thread count | Optional |
 | -variant | Algorithm variant | Optional |
 | -help | Prints the help | Optional |

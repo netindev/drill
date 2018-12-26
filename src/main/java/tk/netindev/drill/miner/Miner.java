@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import com.eclipsesource.json.JsonObject;
 
 import tk.netindev.drill.Drill;
+import tk.netindev.drill.util.Hashrate;
+import tk.netindev.drill.util.Misc;
 
 /**
  * 
@@ -34,8 +36,11 @@ public class Miner {
    private Socket socket;
    private PrintWriter printWriter;
    private Scanner scanner;
+   
+   protected final Hashrate hashrate = new Hashrate();
 
    private final Set<Worker> set = new HashSet<>();
+   
    private int variant;
 
    public Miner(String host, String user, String pass, int port, int thread,
@@ -85,6 +90,7 @@ public class Miner {
                logger.info("New job received, diff: "
                      + (Integer.MAX_VALUE / job.getTarget()) * 2);
                this.work(job);
+               logger.info("CPU load: " + Misc.getProcessCpuLoad() + "%, Hashrate: " + String.format("%.2f", this.getHashrate()) + " h/s");
             }
          }
          logger.info("Connection interrupted");
@@ -115,14 +121,6 @@ public class Miner {
                               (((target[3] << 24) | ((target[2] & 255) << 16))
                                     | ((target[1] & 255) << 8))
                                     | (target[0] & 255));
-                     } else if (jobTable.getName().equals("algo")) {
-                        logger.info(
-                              "Algorithm: " + jobTable.getValue().asString());
-                     } else if (jobTable.getName().equals("variant")) {
-                        logger.info("Variant type: "
-                              + jobTable.getValue().asString());
-                        this.variant = Integer
-                              .parseInt(jobTable.getValue().asString());
                      }
                   });
                   status.set(true);
@@ -163,20 +161,7 @@ public class Miner {
       return info.get() ? null : job;
    }
 
-   private void work(Job job) {
-      // I didn't find a better way than this.
-      this.set.forEach(Thread::interrupt);
-      this.set.clear();
-      
-      for (int i = 0; i < this.thread; i++) {
-         final Worker worker = new Worker(this, job, 100000 * i,
-               this.variant);
-         worker.start();
-         this.set.add(worker);
-      }
-   }
-
-   public void send(Job job, byte[] nonce, byte[] result) {
+   protected void send(Job job, byte[] nonce, byte[] result) {
       final JsonObject res = new JsonObject(), doc = new JsonObject();
       res.add("id", job.getId());
       res.add("job_id", job.getJobId());
@@ -190,5 +175,31 @@ public class Miner {
       this.printWriter.print(doc.toString() + "\n");
       this.printWriter.flush();
    }
+   
+   private void work(Job job) {
+      // I didn't find a better way than this.
+      this.set.forEach(Thread::interrupt);
+      this.set.clear();
+      
+      for (int i = 0; i < this.thread; i++) {
+         final Worker worker = new Worker(this, job, 100000 * i,
+               this.variant);
+         worker.start();
+         this.set.add(worker);
+      }
+   }
+   
+   private float getHashrate() {
+      if (this.hashrate.size() < 10) {
+         return 0.0F;
+      } else {
+         long runningTime = System.currentTimeMillis() - this.hashrate.element();
+         if (runningTime < 10) {
+            return 0.0F;
+         } else {
+            return (float) (this.hashrate.size() / (runningTime * 0.001D));
+         }
+      }
+  }
 
 }

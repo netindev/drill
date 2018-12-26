@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
+
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  *
@@ -11,6 +14,13 @@ import java.io.InputStream;
  *
  */
 public class Misc {
+
+   public static Integer getProcessCpuLoad() {
+      double value = ((OperatingSystemMXBean) ManagementFactory
+            .getOperatingSystemMXBean()).getProcessCpuLoad();
+      String string = String.format("%.2f", value);
+      return Integer.parseInt(string.substring(string.length() - 2));
+   }
 
    public static boolean isInteger(String string) {
       try {
@@ -22,8 +32,7 @@ public class Misc {
    }
 
    public static void loadLibrary(String name) throws IOException {
-      final InputStream inputStream = Misc.class
-            .getResourceAsStream(name);
+      final InputStream inputStream = Misc.class.getResourceAsStream(name);
       final byte[] buffer = new byte[1024];
       int read = -1;
       final File temp = File.createTempFile(name, "");
