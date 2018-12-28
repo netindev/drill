@@ -21,7 +21,7 @@ import tk.netindev.drill.util.Hashrate;
 import tk.netindev.drill.util.Misc;
 
 /**
- * 
+ *
  * @author netindev
  *
  */
@@ -36,12 +36,12 @@ public class Miner {
    private Socket socket;
    private PrintWriter printWriter;
    private Scanner scanner;
-   
+
    protected final Hashrate hashrate = new Hashrate();
 
    private final Set<Worker> set = new HashSet<>();
-   
-   private int variant;
+
+   private final int variant;
 
    public Miner(String host, String user, String pass, int port, int thread,
          int variant) {
@@ -84,13 +84,20 @@ public class Miner {
       if (this.connect()) {
          logger.info("Connected to: " + this.host + ":" + this.port);
          while (this.scanner.hasNextLine()) {
-            final String string = this.scanner.nextLine();
-            final Job job = this.parseJob(string);
-            if (job != null) {
-               logger.info("New job received, diff: "
-                     + (Integer.MAX_VALUE / job.getTarget()) * 2);
-               this.work(job);
-               logger.info("CPU load: " + Misc.getProcessCpuLoad() + "%, Hashrate: " + String.format("%.2f", this.getHashrate()) + " h/s");
+            try {
+               final String string = this.scanner.nextLine();
+               final Job job = this.parseJob(string);
+               if (job != null) {
+                  logger.info("New job received, diff: "
+                        + (Integer.MAX_VALUE / job.getTarget()) * 2);
+                  this.work(job);
+                  logger.info("CPU load: " + Misc.getProcessCpuLoad()
+                        + "%, Hashrate: "
+                        + String.format("%.2f", this.getHashrate()) + " h/s");
+               }
+            } catch (final Exception e) {
+               logger.error(e.getMessage());
+               break;
             }
          }
          logger.info("Connection interrupted");
@@ -112,11 +119,13 @@ public class Miner {
                } else if (resultTable.getName().equals("job")) {
                   resultTable.getValue().asObject().forEach(jobTable -> {
                      if (jobTable.getName().equals("blob")) {
-                        job.setBlob(DatatypeConverter.parseHexBinary(jobTable.getValue().asString()));
+                        job.setBlob(DatatypeConverter
+                              .parseHexBinary(jobTable.getValue().asString()));
                      } else if (jobTable.getName().equals("job_id")) {
                         job.setJobId(jobTable.getValue().asString());
                      } else if (jobTable.getName().equals("target")) {
-                        final byte[] target = DatatypeConverter.parseHexBinary(jobTable.getValue().asString());
+                        final byte[] target = DatatypeConverter
+                              .parseHexBinary(jobTable.getValue().asString());
                         job.setTarget(
                               (((target[3] << 24) | ((target[2] & 255) << 16))
                                     | ((target[1] & 255) << 8))
@@ -136,6 +145,10 @@ public class Miner {
             if (!member.getValue().isNull()) {
                member.getValue().asObject().forEach(errorTable -> {
                   if (errorTable.getName().equals("message")) {
+                     if (errorTable.getValue().asString()
+                           .equals("Unauthenticated")) {
+                        throw new RuntimeException("Unauthenticated");
+                     }
                      logger.error(errorTable.getValue().asString());
                      info.set(true);
                   }
@@ -146,12 +159,13 @@ public class Miner {
                if (paramTable.getName().equals("id")) {
                   job.setId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("blob")) {
-                  job.setBlob(
-                        DatatypeConverter.parseHexBinary(paramTable.getValue().asString()));
+                  job.setBlob(DatatypeConverter
+                        .parseHexBinary(paramTable.getValue().asString()));
                } else if (paramTable.getName().equals("job_id")) {
                   job.setJobId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("target")) {
-                  final byte[] target = DatatypeConverter.parseHexBinary(paramTable.getValue().asString());
+                  final byte[] target = DatatypeConverter
+                        .parseHexBinary(paramTable.getValue().asString());
                   job.setTarget((((target[3] << 24) | ((target[2] & 255) << 16))
                         | ((target[1] & 255) << 8)) | (target[0] & 255));
                }
@@ -175,31 +189,31 @@ public class Miner {
       this.printWriter.print(doc.toString() + "\n");
       this.printWriter.flush();
    }
-   
+
    private void work(Job job) {
       // I didn't find a better way than this.
       this.set.forEach(Thread::interrupt);
       this.set.clear();
-      
+
       for (int i = 0; i < this.thread; i++) {
-         final Worker worker = new Worker(this, job, 100000 * i,
-               this.variant);
+         final Worker worker = new Worker(this, job, 100000 * i, this.variant);
          worker.start();
          this.set.add(worker);
       }
    }
-   
+
    private float getHashrate() {
       if (this.hashrate.size() < 10) {
          return 0.0F;
       } else {
-         long runningTime = System.currentTimeMillis() - this.hashrate.element();
+         final long runningTime = System.currentTimeMillis()
+               - this.hashrate.element();
          if (runningTime < 10) {
             return 0.0F;
          } else {
             return (float) (this.hashrate.size() / (runningTime * 0.001D));
          }
       }
-  }
+   }
 
 }

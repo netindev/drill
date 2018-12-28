@@ -16,9 +16,9 @@ import com.sun.management.OperatingSystemMXBean;
 public class Misc {
 
    public static Integer getProcessCpuLoad() {
-      double value = ((OperatingSystemMXBean) ManagementFactory
+      final double value = ((OperatingSystemMXBean) ManagementFactory
             .getOperatingSystemMXBean()).getProcessCpuLoad();
-      String string = String.format("%.2f", value);
+      final String string = String.format("%.2f", value);
       return Integer.parseInt(string.substring(string.length() - 2));
    }
 

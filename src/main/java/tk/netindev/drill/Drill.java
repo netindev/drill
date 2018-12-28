@@ -31,9 +31,11 @@ public class Drill {
       try {
          System.out.println("Drill cryptonight miner, written by netindev, V: "
                + PACKAGE_VERSION);
-         String system = System.getProperty("os.name").toLowerCase();
-         if (!(system.indexOf("win") >= 0 || system.indexOf("nix") >= 0 || system.indexOf("nux") >= 0 || system.indexOf("aix") >= 0)) {
-            logger.error("Unfortunately, " + system + " isn't supported at this time.");
+         final String system = System.getProperty("os.name").toLowerCase();
+         if (!(system.indexOf("win") >= 0 || system.indexOf("nix") >= 0
+               || system.indexOf("nux") >= 0 || system.indexOf("aix") >= 0)) {
+            logger.error("Unfortunately, " + system
+                  + " isn't supported at this time.");
             return;
          }
          parseArgs(args);
@@ -68,7 +70,8 @@ public class Drill {
                : "",
                thread = parse.hasOption("thread")
                      ? parse.getOptionValue("thread")
-                     : String.valueOf(Runtime.getRuntime().availableProcessors() - 1),
+                     : String.valueOf(
+                           Runtime.getRuntime().availableProcessors() - 1),
                variant = parse.hasOption("variant")
                      ? parse.getOptionValue("variant")
                      : "-1";
