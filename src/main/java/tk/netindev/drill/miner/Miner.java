@@ -18,7 +18,6 @@ import com.eclipsesource.json.JsonObject;
 
 import tk.netindev.drill.Drill;
 import tk.netindev.drill.util.Hashrate;
-import tk.netindev.drill.util.Misc;
 
 /**
  *
@@ -91,8 +90,7 @@ public class Miner {
                   logger.info("New job received, diff: "
                         + (Integer.MAX_VALUE / job.getTarget()) * 2);
                   this.work(job);
-                  logger.info("CPU load: " + Misc.getProcessCpuLoad()
-                        + "%, Hashrate: "
+                  logger.info("Hashrate: "
                         + String.format("%.2f", this.getHashrate()) + " h/s");
                }
             } catch (final Exception e) {

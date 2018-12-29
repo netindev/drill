@@ -49,7 +49,7 @@ public class Worker extends Thread {
                this.miner.hashrate.pop();
             }
          }
-         this.miner.hashrate.add(Long.valueOf(System.currentTimeMillis()));
+         this.miner.hashrate.add(System.currentTimeMillis());
          nonce++;
       }
    }

@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.management.ManagementFactory;
-
-import com.sun.management.OperatingSystemMXBean;
 
 /**
  *
@@ -14,13 +11,6 @@ import com.sun.management.OperatingSystemMXBean;
  *
  */
 public class Misc {
-
-   public static Integer getProcessCpuLoad() {
-      final double value = ((OperatingSystemMXBean) ManagementFactory
-            .getOperatingSystemMXBean()).getProcessCpuLoad();
-      final String string = String.format("%.2f", value);
-      return Integer.parseInt(string.substring(string.length() - 2));
-   }
 
    public static boolean isInteger(String string) {
       try {
