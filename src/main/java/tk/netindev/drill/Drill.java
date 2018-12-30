@@ -76,10 +76,10 @@ public class Drill {
                      ? parse.getOptionValue("variant")
                      : "-1";
          if (!Misc.isInteger(port)) {
-            logger.error("The port isn't a integer");
+            logger.error("The port isn't an integer");
             return;
          } else if (!Misc.isInteger(thread)) {
-            logger.error("The thread isn't a integer");
+            logger.error("The thread isn't an integer");
             return;
          }
          new Miner(host, user, pass, Integer.parseInt(port),

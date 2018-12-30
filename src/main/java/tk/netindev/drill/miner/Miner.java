@@ -86,6 +86,7 @@ public class Miner {
             try {
                final String string = this.scanner.nextLine();
                final Job job = this.parseJob(string);
+               System.out.println(string);
                if (job != null) {
                   logger.info("New job received, diff: "
                         + (Integer.MAX_VALUE / job.getTarget()) * 2);

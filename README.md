@@ -6,7 +6,7 @@ CryptonightV8/Monero miner written in java using JNI bindings.
 * Git tree: https://github.com/netindev/drill.git
 
 ## Usage
-Usage: ```java -jar drill-x.x.x.jar -threads 2 -host localhost -port 3333 -user 4AignrnSVPiXUwk3nKBsTWVi4PCvAKPsrJKSpqinK55bQPFXHTsbYbe5FtUmxjJTbcATQ233gkntYA51fd6Hmur5F3v2o1G -pass x```
+Usage: ```java -jar drill-x.x.x.jar -thread 2 -host localhost -port 3333 -user 4AignrnSVPiXUwk3nKBsTWVi4PCvAKPsrJKSpqinK55bQPFXHTsbYbe5FtUmxjJTbcATQ233gkntYA51fd6Hmur5F3v2o1G -pass x```
 
 ### Options
 | Arg | Description | Required |
