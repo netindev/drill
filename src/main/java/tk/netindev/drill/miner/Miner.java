@@ -29,9 +29,9 @@ public class Miner {
    private static final Logger logger = LoggerFactory
          .getLogger(Miner.class.getName());
 
-   public String host, user, pass;
-   public int port, thread;
-
+   private final String host, user, pass;
+   private final int port, thread;
+   
    private Socket socket;
    private PrintWriter printWriter;
    private Scanner scanner;
@@ -79,14 +79,13 @@ public class Miner {
       }
    }
 
-   public void start() {
+   public void start() throws Exception {
       if (this.connect()) {
          logger.info("Connected to: " + this.host + ":" + this.port);
          while (this.scanner.hasNextLine()) {
             try {
                final String string = this.scanner.nextLine();
                final Job job = this.parseJob(string);
-               System.out.println(string);
                if (job != null) {
                   logger.info("New job received, diff: "
                         + (Integer.MAX_VALUE / job.getTarget()) * 2);
@@ -101,6 +100,7 @@ public class Miner {
          }
          logger.info("Connection interrupted");
          this.set.forEach(Thread::interrupt);
+         this.socket.close();
       } else {
          logger.error("Couldn't establish connection to the host.");
       }
@@ -175,16 +175,16 @@ public class Miner {
    }
 
    protected void send(Job job, byte[] nonce, byte[] result) {
-      final JsonObject res = new JsonObject(), doc = new JsonObject();
-      res.add("id", job.getId());
-      res.add("job_id", job.getJobId());
-      res.add("nonce", DatatypeConverter.printHexBinary(nonce).toLowerCase());
-      res.add("result", DatatypeConverter.printHexBinary(result).toLowerCase());
+      final JsonObject params = new JsonObject(), doc = new JsonObject();
+      params.add("id", job.getId());
+      params.add("job_id", job.getJobId());
+      params.add("nonce", DatatypeConverter.printHexBinary(nonce).toLowerCase());
+      params.add("result", DatatypeConverter.printHexBinary(result).toLowerCase());
 
       doc.add("id", 1);
       doc.add("jsonrpc", "2.0");
       doc.add("method", "submit");
-      doc.add("params", res);
+      doc.add("params", params);
       this.printWriter.print(doc.toString() + "\n");
       this.printWriter.flush();
    }

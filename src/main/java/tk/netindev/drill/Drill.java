@@ -25,7 +25,7 @@ public class Drill {
    public static void main(String[] args) {
       if (args.length == 0) {
          logger.error(
-               "Invalid arguments, please add to the arguments \"--help\".");
+               "Invalid arguments, please add to the arguments \"-help\".");
          return;
       }
       try {
@@ -53,7 +53,8 @@ public class Drill {
       options.addOption(Option.builder("pass").hasArg().build());
       options.addOption(Option.builder("thread").hasArg().build());
       options.addOption(Option.builder("variant").hasArg().build());
-      options.addOption(Option.builder("help").hasArg().build());
+      
+      options.addOption(Option.builder("help").build());
       try {
          final CommandLine parse = new DefaultParser().parse(options, args);
          if (parse.hasOption("help")) {
@@ -87,6 +88,8 @@ public class Drill {
       } catch (final ParseException e) {
          logger.error(e.getMessage());
          logger.error("Correct use: java -jar scuti-lite.jar --help");
+      } catch (Exception e) {
+         logger.error(e.getMessage());
       }
    }
 

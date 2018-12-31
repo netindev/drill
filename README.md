@@ -19,6 +19,15 @@ Usage: ```java -jar drill-x.x.x.jar -thread 2 -host localhost -port 3333 -user 4
 | -variant | Algorithm variant | Optional |
 | -help | Prints the help | Optional |
 
+## Build
+CMake:
+* Install [CMake](https://cmake.org/download/)
+* Go to `..\drill\src\main\jni` and execute `cmake .`
+
+Java:
+* Install [Maven](https://maven.apache.org/download.html)
+* Go to: `..\drill` and execute `mvn clean install`
+
 ## Contacts
-* contact@netindev.tk
+* [email](mailto:contact@netindev.tk)
 * [twitter](https://twitter.com/netindev)
