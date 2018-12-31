@@ -20,7 +20,7 @@ public class Drill {
 
    private static final Logger logger = LoggerFactory
          .getLogger(Drill.class.getName());
-   public static final double PACKAGE_VERSION = 0.02D;
+   public static final double PACKAGE_VERSION = 0.03D;
 
    public static void main(String[] args) {
       if (args.length == 0) {
