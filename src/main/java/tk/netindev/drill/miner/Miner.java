@@ -9,15 +9,15 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonObject.Member;
 
 import tk.netindev.drill.Drill;
 import tk.netindev.drill.util.Hashrate;
+import tk.netindev.drill.util.Hex;
 
 /**
  *
@@ -31,7 +31,7 @@ public class Miner {
 
    private final String host, user, pass;
    private final int port, thread;
-   
+
    private Socket socket;
    private PrintWriter printWriter;
    private Scanner scanner;
@@ -40,16 +40,12 @@ public class Miner {
 
    private final Set<Worker> set = new HashSet<>();
 
-   private final int variant;
-
-   public Miner(String host, String user, String pass, int port, int thread,
-         int variant) {
+   public Miner(String host, String user, String pass, int port, int thread) {
       this.host = host;
       this.user = user;
       this.pass = pass;
       this.port = port;
       this.thread = thread;
-      this.variant = variant;
    }
 
    private boolean connect() {
@@ -57,7 +53,7 @@ public class Miner {
          this.socket = new Socket(this.host, this.port);
          this.printWriter = new PrintWriter(this.socket.getOutputStream());
          this.scanner = new Scanner(this.socket.getInputStream());
-         this.socket.setTcpNoDelay(true);
+         this.socket.setKeepAlive(true);
          final JsonObject params = new JsonObject(), doc = new JsonObject();
          params.add("login", this.user);
          params.add("pass", this.pass);
@@ -98,11 +94,10 @@ public class Miner {
                break;
             }
          }
-         logger.info("Connection interrupted");
-         this.set.forEach(Thread::interrupt);
-         this.socket.close();
+         logger.error("Disconnected from the pool");
+         this.reconnect();
       } else {
-         logger.error("Couldn't establish connection to the host.");
+         this.reconnect();
       }
    }
 
@@ -110,27 +105,27 @@ public class Miner {
       final Job job = new Job();
       final AtomicBoolean status = new AtomicBoolean(false),
             info = new AtomicBoolean(false);
-      JsonObject.readFrom(string).forEach(member -> {
+      for (Member member : JsonObject.readFrom(string)) {
          if (member.getName().equals("result")) {
-            member.getValue().asObject().forEach(resultTable -> {
+            for (Member resultTable : member.getValue().asObject()) {
                if (resultTable.getName().equals("id")) {
                   job.setId(resultTable.getValue().asString());
                } else if (resultTable.getName().equals("job")) {
-                  resultTable.getValue().asObject().forEach(jobTable -> {
+                  for (Member jobTable : resultTable.getValue().asObject()) {
                      if (jobTable.getName().equals("blob")) {
-                        job.setBlob(DatatypeConverter
-                              .parseHexBinary(jobTable.getValue().asString()));
+                        job.setBlob(Hex
+                              .unhexlify(jobTable.getValue().asString()));
                      } else if (jobTable.getName().equals("job_id")) {
                         job.setJobId(jobTable.getValue().asString());
                      } else if (jobTable.getName().equals("target")) {
-                        final byte[] target = DatatypeConverter
-                              .parseHexBinary(jobTable.getValue().asString());
+                        final byte[] target = Hex
+                              .unhexlify(jobTable.getValue().asString());
                         job.setTarget(
                               (((target[3] << 24) | ((target[2] & 255) << 16))
                                     | ((target[1] & 255) << 8))
                                     | (target[0] & 255));
                      }
-                  });
+                  }
                   status.set(true);
                } else if (resultTable.getName().equals("status")) {
                   if (resultTable.getValue().asString().equals("OK")
@@ -139,10 +134,10 @@ public class Miner {
                      info.set(true);
                   }
                }
-            });
+            }
          } else if (member.getName().equals("error")) {
             if (!member.getValue().isNull()) {
-               member.getValue().asObject().forEach(errorTable -> {
+               for (Member errorTable : member.getValue().asObject()) {
                   if (errorTable.getName().equals("message")) {
                      if (errorTable.getValue().asString()
                            .equals("Unauthenticated")) {
@@ -151,26 +146,26 @@ public class Miner {
                      logger.error(errorTable.getValue().asString());
                      info.set(true);
                   }
-               });
+               }
             }
          } else if (member.getName().equals("params")) {
-            member.getValue().asObject().forEach(paramTable -> {
+            for (Member paramTable : member.getValue().asObject()) {
                if (paramTable.getName().equals("id")) {
                   job.setId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("blob")) {
-                  job.setBlob(DatatypeConverter
-                        .parseHexBinary(paramTable.getValue().asString()));
+                  job.setBlob(
+                        Hex.unhexlify(paramTable.getValue().asString()));
                } else if (paramTable.getName().equals("job_id")) {
                   job.setJobId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("target")) {
-                  final byte[] target = DatatypeConverter
-                        .parseHexBinary(paramTable.getValue().asString());
+                  final byte[] target = Hex
+                        .unhexlify(paramTable.getValue().asString());
                   job.setTarget((((target[3] << 24) | ((target[2] & 255) << 16))
                         | ((target[1] & 255) << 8)) | (target[0] & 255));
                }
-            });
+            }
          }
-      });
+      }
       return info.get() ? null : job;
    }
 
@@ -178,8 +173,8 @@ public class Miner {
       final JsonObject params = new JsonObject(), doc = new JsonObject();
       params.add("id", job.getId());
       params.add("job_id", job.getJobId());
-      params.add("nonce", DatatypeConverter.printHexBinary(nonce).toLowerCase());
-      params.add("result", DatatypeConverter.printHexBinary(result).toLowerCase());
+      params.add("nonce", Hex.hexlify(nonce).toLowerCase());
+      params.add("result", Hex.hexlify(result).toLowerCase());
 
       doc.add("id", 1);
       doc.add("jsonrpc", "2.0");
@@ -191,11 +186,13 @@ public class Miner {
 
    private void work(Job job) {
       // I didn't find a better way than this.
-      this.set.forEach(Thread::interrupt);
+      for (Thread thread : this.set) {
+         thread.interrupt();
+      }
       this.set.clear();
 
       for (int i = 0; i < this.thread; i++) {
-         final Worker worker = new Worker(this, job, 100000 * i, this.variant);
+         final Worker worker = new Worker(this, job, 100000 * i);
          worker.start();
          this.set.add(worker);
       }
@@ -212,6 +209,25 @@ public class Miner {
          } else {
             return (float) (this.hashrate.size() / (runningTime * 0.001D));
          }
+      }
+   }
+   
+   private void reconnect() {
+      try {
+         logger.info(
+               "Reconnecting in 30 seconds");
+         Thread.sleep(1000L * 30L);
+         while (!this.connect()) {
+            logger.error(
+                  "Couldn't connect, trying to reconnect in 30 seconds");
+            for (Thread thread : this.set) {
+               thread.interrupt();
+            }
+            Thread.sleep(1000L * 30L);
+         }
+         this.start();
+      } catch (Exception e) {
+         e.printStackTrace();
       }
    }
 

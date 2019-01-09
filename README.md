@@ -1,5 +1,5 @@
 # drill [![Build Status](https://travis-ci.org/netindev/drill.svg?branch=master)](https://travis-ci.org/netindev/drill)
-CryptonightV8/Monero miner written in java using JNI bindings.
+Monero miner written in java using JNI bindings.
 
 ## Download
 * Binary releases: https://github.com/netindev/drill/releases
@@ -16,13 +16,12 @@ Usage: ```java -jar drill-x.x.x.jar -thread 2 -host localhost -port 3333 -user 4
 | -port | Pool host port | Yes |
 | -pass | Password to login | Optional |
 | -thread | Thread count | Optional |
-| -variant | Algorithm variant | Optional |
 | -help | Prints the help | Optional |
 
 ## Build
 CMake:
 * Install [CMake](https://cmake.org/download/)
-* Go to `..\drill\src\main\jni` and execute `cmake .`
+* Go to: `..\drill\src\main\jni` and execute `cmake .`
 
 Java:
 * Install [Maven](https://maven.apache.org/download.html)

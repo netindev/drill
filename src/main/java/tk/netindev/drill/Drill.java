@@ -52,7 +52,6 @@ public class Drill {
 
       options.addOption(Option.builder("pass").hasArg().build());
       options.addOption(Option.builder("thread").hasArg().build());
-      options.addOption(Option.builder("variant").hasArg().build());
       
       options.addOption(Option.builder("help").build());
       try {
@@ -60,7 +59,7 @@ public class Drill {
          if (parse.hasOption("help")) {
             logger.info("Arguments with * are optional.");
             logger.info(
-                  "java -jar drill.jar -host \"localhost\" -user \"netindev.8700k\" -port \"1000\" -pass* \"12345\" -thread* \"7\" -variant* 2");
+                  "java -jar drill.jar -host \"localhost\" -user \"netindev.8700k\" -port \"1000\" -pass* \"12345\" -thread* \"7\"");
             return;
          }
          final String host = parse.getOptionValue("host"),
@@ -72,10 +71,7 @@ public class Drill {
                thread = parse.hasOption("thread")
                      ? parse.getOptionValue("thread")
                      : String.valueOf(
-                           Runtime.getRuntime().availableProcessors() - 1),
-               variant = parse.hasOption("variant")
-                     ? parse.getOptionValue("variant")
-                     : "-1";
+                           Runtime.getRuntime().availableProcessors() - 1);
          if (!Misc.isInteger(port)) {
             logger.error("The port isn't an integer");
             return;
@@ -84,7 +80,7 @@ public class Drill {
             return;
          }
          new Miner(host, user, pass, Integer.parseInt(port),
-               Integer.parseInt(thread), Integer.parseInt(variant)).start();
+               Integer.parseInt(thread)).start();
       } catch (final ParseException e) {
          logger.error(e.getMessage());
          logger.error("Correct use: java -jar scuti-lite.jar --help");
