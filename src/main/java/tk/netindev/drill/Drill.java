@@ -20,9 +20,10 @@ public class Drill {
 
    private static final Logger logger = LoggerFactory
          .getLogger(Drill.class.getName());
-   public static final double PACKAGE_VERSION = 0.03D;
+   public static final double PACKAGE_VERSION = 0.04D;
 
    public static void main(String[] args) {
+
       if (args.length == 0) {
          logger.error(
                "Invalid arguments, please add to the arguments \"-help\".");
@@ -33,7 +34,8 @@ public class Drill {
                + PACKAGE_VERSION);
          final String system = System.getProperty("os.name").toLowerCase();
          if (!(system.indexOf("win") >= 0 || system.indexOf("nix") >= 0
-               || system.indexOf("nux") >= 0 || system.indexOf("aix") >= 0)) {
+               || system.indexOf("nux") >= 0 || system.indexOf("aix") >= 0)
+               || !System.getProperty("sun.arch.data.model").equals("64")) {
             logger.error("Unfortunately, " + system
                   + " isn't supported at this time.");
             return;
@@ -52,7 +54,7 @@ public class Drill {
 
       options.addOption(Option.builder("pass").hasArg().build());
       options.addOption(Option.builder("thread").hasArg().build());
-      
+
       options.addOption(Option.builder("help").build());
       try {
          final CommandLine parse = new DefaultParser().parse(options, args);
@@ -84,7 +86,7 @@ public class Drill {
       } catch (final ParseException e) {
          logger.error(e.getMessage());
          logger.error("Correct use: java -jar scuti-lite.jar --help");
-      } catch (Exception e) {
+      } catch (final Exception e) {
          logger.error(e.getMessage());
       }
    }

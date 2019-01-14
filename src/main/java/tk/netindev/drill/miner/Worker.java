@@ -26,12 +26,13 @@ public class Worker extends Thread {
       final byte[] array = new byte[4];
       final byte[] blob = this.job.getBlob();
       final int target = this.job.getTarget();
-      while (!Thread.interrupted()) {
+      while (!interrupted()) {
          blob[39] = (byte) nonce;
          blob[40] = (byte) (nonce >> 8);
          blob[41] = (byte) (nonce >> 16);
          blob[42] = (byte) (nonce >> 24);
-         Hasher.slowHash(blob, hash, 2 /* (blob[0] - 6 < 0 ? 0 : blob[0] - 6) */);
+         Hasher.slowHash(blob, hash,
+               2 /* (blob[0] - 6 < 0 ? 0 : blob[0] - 6) */);
          final int difficulty = (((hash[31] << 24) | ((hash[30] & 255) << 16))
                | ((hash[29] & 255) << 8)) | (hash[28] & 255);
          if (difficulty >= 0 && difficulty <= target) {
@@ -42,7 +43,8 @@ public class Worker extends Thread {
             this.miner.send(this.job, array, hash);
          }
          synchronized (this.miner.hashrate) {
-            while (this.miner.hashrate.size() > 99 && !this.miner.hashrate.isEmpty()) {
+            while (this.miner.hashrate.size() > 99
+                  && !this.miner.hashrate.isEmpty()) {
                this.miner.hashrate.pop();
             }
          }

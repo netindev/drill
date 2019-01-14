@@ -53,7 +53,8 @@ public class Miner {
          this.socket = new Socket(this.host, this.port);
          this.printWriter = new PrintWriter(this.socket.getOutputStream());
          this.scanner = new Scanner(this.socket.getInputStream());
-         this.socket.setKeepAlive(true);
+         this.socket.setTcpNoDelay(true);
+         this.socket.setSoTimeout(1000 * 150 /* 2:30 mins */);
          final JsonObject params = new JsonObject(), doc = new JsonObject();
          params.add("login", this.user);
          params.add("pass", this.pass);
@@ -94,9 +95,14 @@ public class Miner {
                break;
             }
          }
+         for (final Thread thread : this.set) {
+            thread.interrupt();
+         }
+         this.set.clear();
          logger.error("Disconnected from the pool");
          this.reconnect();
       } else {
+         logger.error("Couldn't connect to the pool");
          this.reconnect();
       }
    }
@@ -105,16 +111,17 @@ public class Miner {
       final Job job = new Job();
       final AtomicBoolean status = new AtomicBoolean(false),
             info = new AtomicBoolean(false);
-      for (Member member : JsonObject.readFrom(string)) {
+      for (final Member member : JsonObject.readFrom(string)) {
          if (member.getName().equals("result")) {
-            for (Member resultTable : member.getValue().asObject()) {
+            for (final Member resultTable : member.getValue().asObject()) {
                if (resultTable.getName().equals("id")) {
                   job.setId(resultTable.getValue().asString());
                } else if (resultTable.getName().equals("job")) {
-                  for (Member jobTable : resultTable.getValue().asObject()) {
+                  for (final Member jobTable : resultTable.getValue()
+                        .asObject()) {
                      if (jobTable.getName().equals("blob")) {
-                        job.setBlob(Hex
-                              .unhexlify(jobTable.getValue().asString()));
+                        job.setBlob(
+                              Hex.unhexlify(jobTable.getValue().asString()));
                      } else if (jobTable.getName().equals("job_id")) {
                         job.setJobId(jobTable.getValue().asString());
                      } else if (jobTable.getName().equals("target")) {
@@ -137,7 +144,7 @@ public class Miner {
             }
          } else if (member.getName().equals("error")) {
             if (!member.getValue().isNull()) {
-               for (Member errorTable : member.getValue().asObject()) {
+               for (final Member errorTable : member.getValue().asObject()) {
                   if (errorTable.getName().equals("message")) {
                      if (errorTable.getValue().asString()
                            .equals("Unauthenticated")) {
@@ -149,12 +156,11 @@ public class Miner {
                }
             }
          } else if (member.getName().equals("params")) {
-            for (Member paramTable : member.getValue().asObject()) {
+            for (final Member paramTable : member.getValue().asObject()) {
                if (paramTable.getName().equals("id")) {
                   job.setId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("blob")) {
-                  job.setBlob(
-                        Hex.unhexlify(paramTable.getValue().asString()));
+                  job.setBlob(Hex.unhexlify(paramTable.getValue().asString()));
                } else if (paramTable.getName().equals("job_id")) {
                   job.setJobId(paramTable.getValue().asString());
                } else if (paramTable.getName().equals("target")) {
@@ -186,7 +192,7 @@ public class Miner {
 
    private void work(Job job) {
       // I didn't find a better way than this.
-      for (Thread thread : this.set) {
+      for (final Thread thread : this.set) {
          thread.interrupt();
       }
       this.set.clear();
@@ -211,22 +217,17 @@ public class Miner {
          }
       }
    }
-   
+
    private void reconnect() {
       try {
-         logger.info(
-               "Reconnecting in 30 seconds");
+         logger.info("Reconnecting in 30 seconds");
          Thread.sleep(1000L * 30L);
          while (!this.connect()) {
-            logger.error(
-                  "Couldn't connect, trying to reconnect in 30 seconds");
-            for (Thread thread : this.set) {
-               thread.interrupt();
-            }
+            logger.error("Couldn't connect, trying to reconnect in 30 seconds");
             Thread.sleep(1000L * 30L);
          }
          this.start();
-      } catch (Exception e) {
+      } catch (final Exception e) {
          e.printStackTrace();
       }
    }
