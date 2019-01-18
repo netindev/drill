@@ -22,7 +22,7 @@ public class Worker extends Thread {
    @Override
    public void run() {
       int nonce = this.nonce;
-      byte[] hash = new byte[32];
+      final byte[] hash = new byte[32];
       final byte[] array = new byte[4];
       final byte[] blob = this.job.getBlob();
       final int target = this.job.getTarget();
