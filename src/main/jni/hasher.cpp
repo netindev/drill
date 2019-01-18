@@ -44,7 +44,7 @@ extern "C" {
 
 	JNIEXPORT void JNICALL Java_tk_netindev_drill_hasher_Hasher_slowHash(JNIEnv *env, jclass clazz, jbyteArray input, jbyteArray output) {
 		unsigned char* inputBuffer = as_unsigned_char_array(env, input);
-		unsigned char* outputBuffer = as_unsigned_char_array(env, input);
+		unsigned char* outputBuffer = as_unsigned_char_array(env, output);
 		cryptonight_ctx* ctx[SIZE];
 		for (int i = 0; i < SIZE; i++) {
 			ctx[i] = alloc_ctx();
