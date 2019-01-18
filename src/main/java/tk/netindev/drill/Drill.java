@@ -23,7 +23,6 @@ public class Drill {
    public static final double PACKAGE_VERSION = 0.04D;
 
    public static void main(String[] args) {
-
       if (args.length == 0) {
          logger.error(
                "Invalid arguments, please add to the arguments \"-help\".");

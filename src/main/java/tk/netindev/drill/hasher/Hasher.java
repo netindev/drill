@@ -17,7 +17,7 @@ public class Hasher {
    private static final Logger logger = LoggerFactory
          .getLogger(Hasher.class.getName());
 
-   public static native void slowHash(byte[] input, byte[] output, int variant);
+   public static native void slowHash(byte[] input, byte[] output);
 
    static {
       String library = null;
